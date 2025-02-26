@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   description: "A place for amazing content under one roof!",
 };
 
+<nav className="flex gap-4">
+  <a href="/" className="text-blue-600 hover:underline">Home</a>
+  <a href="/donate" className="text-blue-600 hover:underline">Donate</a> {/* Add this link */}
+</nav>
+
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
