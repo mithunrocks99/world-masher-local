@@ -1,3 +1,5 @@
+"use client";  // ✅ Add this at the top
+
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,13 +13,14 @@ const memes = [
 ];
 
 export default function MemesPage() {
-  const [randomMemes, setRandomMemes] = useState([]);
+  // ✅ Explicitly define the type
+  const [randomMemes, setRandomMemes] = useState<{ id: number; src: string; caption: string }[]>([]);
 
   useEffect(() => {
-    setRandomMemes(memes.sort(() => 0.5 - Math.random()).slice(0, 3));
+    setRandomMemes([...memes].sort(() => 0.5 - Math.random()).slice(0, 3));
   }, []);
 
-  const shareMeme = (caption) => {
+  const shareMeme = (caption: string) => {
     const shareText = `Check out this meme: ${caption} - Visit world-masher.org`;
     if (navigator.share) {
       navigator.share({ text: shareText });
@@ -32,14 +35,19 @@ export default function MemesPage() {
       {randomMemes.map((meme) => (
         <Card key={meme.id} className="rounded-2xl shadow-lg overflow-hidden">
           <Image src={meme.src} alt="Meme" width={500} height={500} className="w-full h-auto" />
-          <CardContent className="p-4 text-center">
-            <p className="text-lg font-bold">{meme.caption}</p>
-            <Button className="mt-2 flex items-center gap-2" onClick={() => shareMeme(meme.caption)}>
-              <Share2 size={16} /> Share Meme
-            </Button>
-          </CardContent>
+          
+          <CardContent>
+  <div className="p-4 text-center">  {/* ✅ Move className here */}
+    <p className="text-lg font-bold">{meme.caption}</p>
+    <Button className="mt-2 flex items-center gap-2" onClick={() => shareMeme(meme.caption)}>
+      <Share2 size={16} /> Share Meme
+    </Button>
+  </div>
+</CardContent>
+
         </Card>
       ))}
     </div>
   );
 }
+

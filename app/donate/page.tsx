@@ -9,7 +9,7 @@ export default function DonatePage() {
         Scan the QR code below to donate and support World-Masher!
       </p>
       <Image
-        src="/qr-code.png"
+        src="/qr.png"
         alt="Donation QR Code"
         width={250}
         height={250}
