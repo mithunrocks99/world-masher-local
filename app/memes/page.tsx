@@ -1,53 +1,109 @@
-"use client";  // ✅ Add this at the top
+"use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Share2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
-const memes = [
-  { id: 1, src: "meme1.jpg", caption: "When you realize it's Monday..." },
-  { id: 2, src: "meme2.jpg", caption: "Coding at 3 AM be like..." },
-  { id: 3, src: "meme3.jpg", caption: "Me waiting for my food delivery..." }
-];
+interface Meme {
+  name: string;
+  url: string;
+}
 
 export default function MemesPage() {
-  // ✅ Explicitly define the type
-  const [randomMemes, setRandomMemes] = useState<{ id: number; src: string; caption: string }[]>([]);
+  const [trendingMemes, setTrendingMemes] = useState<Meme[]>([]);
+  const [memesOfTheDay, setMemesOfTheDay] = useState<Meme[]>([]);
+  const [otherMemes, setOtherMemes] = useState<Meme[]>([]);
+  const [selectedMeme, setSelectedMeme] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<'memesOfTheDay' | 'trendingMemes' | 'otherMemes'>('memesOfTheDay');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setRandomMemes([...memes].sort(() => 0.5 - Math.random()).slice(0, 3));
+    async function fetchMemes() {
+      try {
+        const response = await fetch("/api/memes");
+        if (!response.ok) throw new Error("Failed to fetch memes");
+        const data = await response.json();
+
+        console.log("Memes Loaded: ", data);
+
+        setTrendingMemes(data.trendingMemes || []);
+        setMemesOfTheDay(data.memesOfTheDay || []);
+        setOtherMemes(data.otherMemes || []);
+      } catch (error) {
+        console.error("Error fetching memes:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchMemes();
   }, []);
 
-  const shareMeme = (caption: string) => {
-    const shareText = `Check out this meme: ${caption} - Visit world-masher.org`;
-    if (navigator.share) {
-      navigator.share({ text: shareText });
-    } else {
-      navigator.clipboard.writeText(shareText);
-      alert("Copied to clipboard! Share it anywhere.");
-    }
-  };
+  if (loading) return <div className="text-center text-2xl mt-10">Loading memes...</div>;
 
   return (
-    <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-      {randomMemes.map((meme) => (
-        <Card key={meme.id} className="rounded-2xl shadow-lg overflow-hidden">
-          <Image src={meme.src} alt="Meme" width={500} height={500} className="w-full h-auto" />
-          
-          <CardContent>
-  <div className="p-4 text-center">  {/* ✅ Move className here */}
-    <p className="text-lg font-bold">{meme.caption}</p>
-    <Button className="mt-2 flex items-center gap-2" onClick={() => shareMeme(meme.caption)}>
-      <Share2 size={16} /> Share Meme
-    </Button>
-  </div>
-</CardContent>
+    <div className="flex">
+      {/* Sidebar */}
+      <aside className="w-1/4 p-4 bg-purple-700 text-white min-h-screen rounded-lg shadow-lg">
+        <nav className="space-y-4">
+          {[
+            { name: "Memes of the Day", section: "memesOfTheDay" },
+            { name: "Trending Memes", section: "trendingMemes" },
+            { name: "Other Memes", section: "otherMemes" },
+          ].map((item, index) => (
+            <button
+              key={index}
+              className={`block w-full text-left px-5 py-3 rounded-full text-lg font-bold transition-all duration-300 ${
+                activeSection === item.section ? "bg-yellow-300 text-black" : "bg-purple-500 hover:bg-yellow-300"
+              }`}
+              onClick={() => setActiveSection(item.section)}
+            >
+              {item.name}
+            </button>
+          ))}
+        </nav>
+      </aside>
 
-        </Card>
-      ))}
+      {/* Main Content */}
+      <main className="flex-1 p-4">
+        {selectedMeme ? (
+          <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-80">
+            <div className="relative bg-white p-4 rounded-lg shadow-lg max-w-screen-md max-h-screen-md">
+              <button
+                onClick={() => setSelectedMeme(null)}
+                className="absolute top-2 right-2 text-black font-bold text-xl"
+              >
+                ✖
+              </button>
+              <img src={selectedMeme} alt="Selected Meme" className="max-w-full max-h-[80vh] object-contain rounded-lg" />
+            </div>
+          </div>
+        ) : (
+          <>
+            <h2 className="text-2xl font-bold mb-4">
+              {activeSection === "memesOfTheDay"
+                ? "Memes of the Day"
+                : activeSection === "trendingMemes"
+                ? "Trending Memes"
+                : "Other Memes"}
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {(activeSection === "memesOfTheDay"
+                ? memesOfTheDay
+                : activeSection === "trendingMemes"
+                ? trendingMemes
+                : otherMemes
+              ).map((meme, index) => (
+                <div key={index} className="cursor-pointer" onClick={() => setSelectedMeme(meme.url)}>
+                  <img
+                    src={meme.url}
+                    alt={meme.name}
+                    className="w-full h-auto object-cover rounded-lg shadow-md hover:opacity-80"
+                  />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </main>
     </div>
   );
 }
-

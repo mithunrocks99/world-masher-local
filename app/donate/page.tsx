@@ -1,23 +1,16 @@
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
+"use client"; // This makes the file a client component
 
 export default function DonatePage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6">
-      <h1 className="text-3xl font-bold mb-6">Support Us</h1>
-      <p className="text-lg text-center mb-4">
-        Scan the QR code below to donate and support World-Masher!
-      </p>
-      <Image
-        src="/qr.png"
-        alt="Donation QR Code"
-        width={250}
-        height={250}
-        className="rounded-lg shadow-lg"
-      />
-      <Button className="mt-6 px-6 py-2 text-lg">
-        Donate Now
-      </Button>
+    <div className="text-center">
+      <h1 className="text-4xl font-bold text-yellow-300">Support World-Masher</h1>
+      <p className="text-lg mt-4">Anything between Rs 1/- and Rs 1 crore/- is gladly accepted 😊</p>
+      
+      <div className="flex justify-center mt-6">
+        <img src="/qr-code.png" alt="QR Code" className="w-40 h-40 border-4 border-white shadow-lg" />
+      </div>
+      
+      <p className="mt-6 text-lg">Scan the QR code to donate and support our platform!</p>
     </div>
   );
 }
