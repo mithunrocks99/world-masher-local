@@ -1,3 +1,10 @@
+"use client";
+
+
+// Your existing code continues...
+
+
+
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
