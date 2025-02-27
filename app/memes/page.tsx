@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 
 const memes = [
-  { id: 1, src: "/memes/meme1.jpg", caption: "When you realize it's Monday..." },
-  { id: 2, src: "/memes/meme2.jpg", caption: "Coding at 3 AM be like..." },
-  { id: 3, src: "/memes/meme3.jpg", caption: "Me waiting for my food delivery..." }
+  { id: 1, src: "meme1.jpg", caption: "When you realize it's Monday..." },
+  { id: 2, src: "meme2.jpg", caption: "Coding at 3 AM be like..." },
+  { id: 3, src: "meme3.jpg", caption: "Me waiting for my food delivery..." }
 ];
 
 export default function MemesPage() {
