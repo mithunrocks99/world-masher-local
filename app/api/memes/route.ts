@@ -5,77 +5,71 @@ const MEME_FOLDER = path.join(process.cwd(), 'public/memes');
 const TRENDING_FOLDER = path.join(MEME_FOLDER, 'trending');
 const HISTORY_FILE = path.join(MEME_FOLDER, 'memeHistory.json');
 
-// Function to get memes from folder
-async function getMemesFromFolder(folderPath: string, urlPath: string) {
-  try {
-    const files = await fs.readdir(folderPath);
-    return files.map(file => ({ name: file, url: `${urlPath}/${file}` }));
-  } catch (error) {
-    console.error(`Error reading folder: ${folderPath}`, error);
-    return [];
-  }
-}
-
-// Function to load stored meme history
 async function getStoredHistory() {
   try {
     const data = await fs.readFile(HISTORY_FILE, 'utf-8');
     return JSON.parse(data);
   } catch {
-    return { lastUpdated: '', memesOfTheDay: [], otherMemes: [] };
+    return { lastUpdated: '', memesOfTheDay: [], trendingMemes: [], otherMemes: [] };
   }
 }
 
-// Function to update history daily
-async function updateHistory(newMemesOfTheDay: any[]) {
+async function getMemesFromFolder(folderPath: string, urlPath: string) {
+  try {
+    const files = await fs.readdir(folderPath);
+    return files.map(file => ({
+      url: `${urlPath}/${file}`,
+      name: file.replace(/\.[^/.]+$/, '') // Remove file extension from name
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function updateHistory(newMemesOfTheDay: any[], newTrendingMemes: any[]) {
   const history = await getStoredHistory();
   const today = new Date().toISOString().split('T')[0];
 
-  // If already updated today, return old data
-  if (history.lastUpdated === today) {
-    return history;
-  }
-
-  // Move yesterday's memesOfTheDay to Other Memes
-  history.otherMemes = [...history.memesOfTheDay, ...history.otherMemes];
-
-  // Keep only the latest 100 memes
-  history.otherMemes = history.otherMemes.slice(0, 100);
-
+  // Move old memes to "Other Memes"
+  history.otherMemes = [...history.otherMemes, ...history.memesOfTheDay, ...history.trendingMemes];
+  
   // Update with new memes
   history.memesOfTheDay = newMemesOfTheDay;
+  history.trendingMemes = newTrendingMemes;
   history.lastUpdated = today;
 
   await fs.writeFile(HISTORY_FILE, JSON.stringify(history, null, 2), 'utf-8');
   return history;
 }
 
-// API GET function
 export async function GET() {
   try {
     const allMemes = await getMemesFromFolder(MEME_FOLDER, "/memes");
     const trendingMemes = await getMemesFromFolder(TRENDING_FOLDER, "/memes/trending");
     let history = await getStoredHistory();
+    const today = new Date().toISOString().split('T')[0];
 
-    // Select 10 random memes if not already set today
-    if (history.lastUpdated !== new Date().toISOString().split('T')[0]) {
+    // If last update is not today, refresh memes
+    if (history.lastUpdated !== today) {
       let newMemesOfTheDay = allMemes
         .filter(meme => !history.memesOfTheDay.some(m => m.url === meme.url))
         .sort(() => 0.5 - Math.random()) // Shuffle
-        .slice(0, 10);
+        .slice(0, 10); // Select top 10
 
+      let newTrendingMemes = trendingMemes
+        .filter(meme => !history.trendingMemes.some(m => m.url === meme.url))
+        .sort(() => 0.5 - Math.random()) // Shuffle
+        .slice(0, 5); // Select top 5
+
+      // Ensure at least 10 memes of the day
       if (newMemesOfTheDay.length < 10) {
         newMemesOfTheDay = allMemes.slice(0, 10);
       }
 
-      history = await updateHistory(newMemesOfTheDay);
+      history = await updateHistory(newMemesOfTheDay, newTrendingMemes);
     }
 
-    return new Response(JSON.stringify({
-      trendingMemes,
-      memesOfTheDay: history.memesOfTheDay,
-      otherMemes: history.otherMemes.slice(0, 10),
-    }), {
+    return new Response(JSON.stringify(history), {
       headers: { 'Content-Type': 'application/json' }
     });
 
